@@ -1,4 +1,5 @@
-import 'package:supabase_flutter/supabase_flutter.dart';
+import 'package:supabase_flutter/supabase_flutter.dart' hide Provider;
+import 'package:supabase_flutter/supabase_flutter.dart' as supa show Provider;
 import '../../features/habits/domain/models/habit.dart';
 import '../../features/habits/domain/models/habit_entry.dart';
 import '../../features/habits/domain/models/streak.dart';
@@ -43,21 +44,12 @@ class SupabaseService {
     }
   }
 
-  Future<AuthResponse> signInWithGoogle() async {
+  Future<bool> signInWithGoogle() async {
     try {
-      final response = await client.auth.signInWithOAuth(
-        Provider.google,
+      return await client.auth.signInWithOAuth(
+        supa.Provider.google,
         redirectTo: 'io.supabase.habitflow://login-callback/',
       );
-      
-      if (response.user != null) {
-        final existingProfile = await getUserProfile(response.user!.id);
-        if (existingProfile == null) {
-          await _createUserProfile(response.user!);
-        }
-      }
-      
-      return response;
     } catch (e) {
       rethrow;
     }

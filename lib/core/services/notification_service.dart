@@ -1,5 +1,6 @@
 import 'dart:async';
 import 'dart:io';
+import 'dart:typed_data';
 import 'package:flutter/material.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:timezone/timezone.dart' as tz;
@@ -69,7 +70,8 @@ class NotificationService {
 
     await cancelHabitReminder(habit.id);
 
-    final reminderTime = habit.reminderTime!;
+    final parts = habit.reminderTime!.split(':');
+    final reminderTime = TimeOfDay(hour: int.parse(parts[0]), minute: int.parse(parts[1]));
     final now = DateTime.now();
     
     // Schedule for each day in frequency
@@ -246,7 +248,7 @@ class NotificationService {
       color: Color(0xFF6C63FF),
       playSound: true,
       enableVibration: true,
-      vibrationPattern: [0, 250, 250, 250],
+      vibrationPattern: Int64List.fromList([0, 250, 250, 250]),
     );
 
     const DarwinNotificationDetails iOSDetails = DarwinNotificationDetails(

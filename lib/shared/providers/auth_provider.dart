@@ -1,5 +1,5 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:supabase_flutter/supabase_flutter.dart';
+import 'package:supabase_flutter/supabase_flutter.dart' hide Provider;
 import '../../core/services/supabase_service.dart';
 import '../../features/auth/domain/models/user_profile.dart';
 import '../../features/auth/data/auth_repository.dart';
@@ -80,12 +80,10 @@ class AuthNotifier extends StateNotifier<AsyncValue<User?>> {
   Future<void> signInWithGoogle() async {
     state = const AsyncValue.loading();
     try {
-      final response = await _authRepository.signInWithGoogle();
-      if (response.user != null) {
-        state = AsyncValue.data(response.user);
-      } else {
-        throw Exception('Google sign in failed');
-      }
+      await _authRepository.signInWithGoogle();
+      // OAuth redirects, user will be picked up by authStateChanges
+      final user = SupabaseService.instance.currentUser;
+      state = AsyncValue.data(user);
     } catch (error, stackTrace) {
       state = AsyncValue.error(error, stackTrace);
     }

@@ -94,7 +94,10 @@ class _EditHabitScreenState extends ConsumerState<EditHabitScreen>
           _targetController.text = habit.targetValue.toString();
           _unit = habit.unit;
           _frequencyDays = habit.frequencyDays.toSet();
-          _reminderTime = habit.reminderTime;
+          if (habit.reminderTime != null) {
+            final parts = habit.reminderTime!.split(':');
+            _reminderTime = TimeOfDay(hour: int.parse(parts[0]), minute: int.parse(parts[1]));
+          }
         });
       }
     }
@@ -127,7 +130,7 @@ class _EditHabitScreenState extends ConsumerState<EditHabitScreen>
         targetValue: _targetValue,
         unit: _unit,
         frequencyDays: _frequencyDays.toList(),
-        reminderTime: _reminderTime,
+        reminderTime: _reminderTime != null ? '${_reminderTime!.hour.toString().padLeft(2, '0')}:${_reminderTime!.minute.toString().padLeft(2, '0')}' : null,
         updatedAt: DateTime.now(),
       );
 
@@ -718,7 +721,7 @@ class _EditHabitScreenState extends ConsumerState<EditHabitScreen>
             ),
             const SizedBox(width: 12),
             Text(
-              _reminderTime?.format24Hour() ?? 'Set reminder time (optional)',
+              _reminderTime != null ? '${_reminderTime!.hour.toString().padLeft(2, '0')}:${_reminderTime!.minute.toString().padLeft(2, '0')}' : 'Set reminder time (optional)',
               style: TextStyle(
                 color: _reminderTime != null ? AppColors.textPrimary : AppColors.textTertiary,
               ),

@@ -207,7 +207,7 @@ class _HabitTileState extends State<HabitTile>
                                 ),
                                 const SizedBox(width: 2),
                                 Text(
-                                  widget.habit.reminderTime!.format24Hour(),
+                                  widget.habit.reminderTime!,
                                   style: Theme.of(context).textTheme.bodySmall?.copyWith(
                                     color: AppColors.textTertiary,
                                     fontSize: 11,

@@ -1,4 +1,4 @@
-import 'package:supabase_flutter/supabase_flutter.dart';
+import 'package:supabase_flutter/supabase_flutter.dart' hide Provider;
 import '../../../core/services/supabase_service.dart';
 
 class AuthRepository {
@@ -20,7 +20,7 @@ class AuthRepository {
     }
   }
 
-  Future<AuthResponse> signInWithGoogle() async {
+  Future<bool> signInWithGoogle() async {
     try {
       return await _supabaseService.signInWithGoogle();
     } catch (e) {

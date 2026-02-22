@@ -109,10 +109,10 @@ class _MonthlyChartState extends State<MonthlyChart>
                           horizontal: 12,
                           vertical: 8,
                         ),
-                        getTooltipItems: (List<LineTooltipItem> touchedSpots) {
-                          return touchedSpots.map((LineTooltipItem touchedSpot) {
+                        getTooltipItems: (List<LineBarSpot> touchedSpots) {
+                          return touchedSpots.map((LineBarSpot spot) {
                             return LineTooltipItem(
-                              'Day ${touchedSpot.x.toInt()}\n${touchedSpot.y.toInt()}%',
+                              'Day ${spot.x.toInt()}\n${spot.y.toInt()}%',
                               GoogleFonts.spaceGrotesk(
                                 fontSize: 12,
                                 fontWeight: FontWeight.w600,

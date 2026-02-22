@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:habitflow/core/constants/colors.dart';
 import 'package:habitflow/shared/providers/auth_provider.dart';
+import 'package:supabase_flutter/supabase_flutter.dart' hide Provider;
 import 'package:habitflow/shared/providers/habits_provider.dart';
 import 'package:habitflow/shared/widgets/glass_card.dart';
 import 'package:habitflow/features/profile/presentation/screens/settings_screen.dart';
@@ -62,7 +63,7 @@ class ProfileScreen extends ConsumerWidget {
               const SizedBox(height: 16),
               Text(
                 authState.when(
-                  data: (user) => user?.displayName ?? 'User',
+                  data: (user) => user?.userMetadata?['full_name'] as String? ?? user?.email ?? 'User',
                   loading: () => '...',
                   error: (_, __) => 'User',
                 ),
@@ -131,7 +132,7 @@ class ProfileScreen extends ConsumerWidget {
   String _getInitial(AsyncValue authState) {
     return authState.when(
       data: (user) {
-        final name = user?.displayName ?? user?.email ?? 'U';
+        final name = user?.userMetadata?['full_name'] as String? ?? user?.email ?? 'U';
         return name.isNotEmpty ? name[0].toUpperCase() : 'U';
       },
       loading: () => '?',

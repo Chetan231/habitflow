@@ -90,7 +90,7 @@ class _AddHabitScreenState extends ConsumerState<AddHabitScreen>
         targetValue: _targetValue,
         unit: _unit,
         frequencyDays: _frequencyDays.toList(),
-        reminderTime: _reminderTime,
+        reminderTime: _reminderTime != null ? '${_reminderTime!.hour.toString().padLeft(2, '0')}:${_reminderTime!.minute.toString().padLeft(2, '0')}' : null,
         createdAt: DateTime.now(),
         updatedAt: DateTime.now(),
       );
@@ -620,7 +620,7 @@ class _AddHabitScreenState extends ConsumerState<AddHabitScreen>
             ),
             const SizedBox(width: 12),
             Text(
-              _reminderTime?.format24Hour() ?? 'Set reminder time (optional)',
+              _reminderTime != null ? '${_reminderTime!.hour.toString().padLeft(2, '0')}:${_reminderTime!.minute.toString().padLeft(2, '0')}' : 'Set reminder time (optional)',
               style: TextStyle(
                 color: _reminderTime != null ? AppColors.textPrimary : AppColors.textTertiary,
               ),
