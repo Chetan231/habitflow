@@ -2,32 +2,41 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:hive_flutter/hive_flutter.dart';
-import 'package:supabase_flutter/supabase_flutter.dart';
-import 'package:flutter_local_notifications/flutter_local_notifications.dart';
-import 'package:path_provider/path_provider.dart';
+import 'package:supabase_flutter/supabase_flutter.dart' hide Provider;
 
 import 'app.dart';
 import 'core/constants/strings.dart';
-import 'core/services/notification_service.dart';
 import 'features/habits/domain/models/habit.dart';
 import 'features/habits/domain/models/habit_entry.dart';
 import 'features/habits/domain/models/streak.dart';
 import 'local/hive_boxes.dart';
 
-final FlutterLocalNotificationsPlugin flutterLocalNotificationsPlugin =
-    FlutterLocalNotificationsPlugin();
+/// Set to true to run without Supabase (demo/offline mode)
+const bool kMockMode = true;
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   
   // Initialize Hive
-  await _initializeHive();
+  await Hive.initFlutter();
   
-  // Initialize Supabase
-  await _initializeSupabase();
+  // Register adapters
+  if (!Hive.isAdapterRegistered(0)) Hive.registerAdapter(HabitAdapter());
+  if (!Hive.isAdapterRegistered(1)) Hive.registerAdapter(HabitEntryAdapter());
+  if (!Hive.isAdapterRegistered(2)) Hive.registerAdapter(StreakAdapter());
+  if (!Hive.isAdapterRegistered(3)) Hive.registerAdapter(HabitTypeAdapter());
   
-  // Initialize Notifications
-  await _initializeNotifications();
+  // Open boxes
+  await HiveBoxes.init();
+  
+  // Initialize Supabase only if not in mock mode
+  if (!kMockMode && AppStrings.supabaseUrl != 'YOUR_SUPABASE_URL') {
+    await Supabase.initialize(
+      url: AppStrings.supabaseUrl,
+      anonKey: AppStrings.supabaseAnonKey,
+      debug: false,
+    );
+  }
   
   // Set system UI overlay style
   SystemChrome.setSystemUIOverlayStyle(
@@ -40,30 +49,4 @@ void main() async {
   );
   
   runApp(const ProviderScope(child: HabitFlowApp()));
-}
-
-Future<void> _initializeHive() async {
-  final appDocumentDir = await getApplicationDocumentsDirectory();
-  await Hive.initFlutter(appDocumentDir.path);
-  
-  // Register adapters
-  Hive.registerAdapter(HabitAdapter());
-  Hive.registerAdapter(HabitEntryAdapter());
-  Hive.registerAdapter(StreakAdapter());
-  Hive.registerAdapter(HabitTypeAdapter());
-  
-  // Open boxes
-  await HiveBoxes.init();
-}
-
-Future<void> _initializeSupabase() async {
-  await Supabase.initialize(
-    url: AppStrings.supabaseUrl,
-    anonKey: AppStrings.supabaseAnonKey,
-    debug: false,
-  );
-}
-
-Future<void> _initializeNotifications() async {
-  await NotificationService.instance.initialize();
 }

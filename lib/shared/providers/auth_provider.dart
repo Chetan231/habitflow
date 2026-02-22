@@ -3,9 +3,11 @@ import 'package:supabase_flutter/supabase_flutter.dart' hide Provider;
 import '../../core/services/supabase_service.dart';
 import '../../features/auth/domain/models/user_profile.dart';
 import '../../features/auth/data/auth_repository.dart';
+import '../../main.dart' show kMockMode;
 
 // Auth state provider
 final authStateProvider = StreamProvider<User?>((ref) {
+  if (kMockMode) return Stream.value(null);
   return SupabaseService.instance.authStateChanges.map((event) => event.session?.user);
 });
 

@@ -15,6 +15,7 @@ import '../../features/ai_coach/presentation/screens/ai_coach_screen.dart';
 import '../../features/profile/presentation/screens/profile_screen.dart';
 import '../../features/profile/presentation/screens/settings_screen.dart';
 import '../../shared/providers/auth_provider.dart';
+import '../../main.dart' show kMockMode;
 
 // Route names
 class AppRoutes {
@@ -40,6 +41,14 @@ final routerProvider = Provider<GoRouter>((ref) {
     initialLocation: AppRoutes.onboarding,
     debugLogDiagnostics: true,
     redirect: (context, state) {
+      // In mock mode, skip auth entirely
+      if (kMockMode) {
+        final isOnboarding = state.uri.path == AppRoutes.onboarding;
+        final isAuthRoute = state.uri.path == AppRoutes.login || state.uri.path == AppRoutes.signup;
+        if (isAuthRoute || isOnboarding) return AppRoutes.home;
+        return null;
+      }
+
       // Check if user is authenticated
       final isAuthenticated = authState.when(
         data: (user) => user != null,

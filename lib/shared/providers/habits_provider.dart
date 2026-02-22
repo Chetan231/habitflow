@@ -4,6 +4,7 @@ import '../../features/habits/domain/models/habit.dart';
 import '../../features/habits/domain/models/habit_entry.dart';
 import '../../core/services/supabase_service.dart';
 import '../../core/utils/date_utils.dart';
+import '../../main.dart' show kMockMode;
 
 // Habit notifier
 class HabitsNotifier extends StateNotifier<AsyncValue<List<Habit>>> {
@@ -19,6 +20,23 @@ class HabitsNotifier extends StateNotifier<AsyncValue<List<Habit>>> {
     try {
       state = const AsyncValue.loading();
       
+      // In mock mode, use demo data
+      if (kMockMode) {
+        final cachedHabits = _habitsBox.values.where((h) => !h.isArchived).toList();
+        if (cachedHabits.isEmpty) {
+          // Seed demo habits
+          final demoHabits = _getDemoHabits();
+          for (final h in demoHabits) {
+            await _habitsBox.put(h.id, h);
+          }
+          state = AsyncValue.data(demoHabits);
+        } else {
+          cachedHabits.sort((a, b) => a.position.compareTo(b.position));
+          state = AsyncValue.data(cachedHabits);
+        }
+        return;
+      }
+
       // Load from local cache first
       final cachedHabits = _habitsBox.values
           .where((habit) => !habit.isArchived)
@@ -77,7 +95,7 @@ class HabitsNotifier extends StateNotifier<AsyncValue<List<Habit>>> {
       await _habitsBox.put(updatedHabit.id, updatedHabit);
       
       // Sync to server
-      await _supabaseService.insertHabit(updatedHabit);
+      if (!kMockMode) await _supabaseService.insertHabit(updatedHabit);
     } catch (error, stackTrace) {
       // Revert on error
       await loadHabits();
@@ -99,7 +117,7 @@ class HabitsNotifier extends StateNotifier<AsyncValue<List<Habit>>> {
         await _habitsBox.put(habit.id, habit);
         
         // Sync to server
-        await _supabaseService.updateHabit(habit);
+        if (!kMockMode) await _supabaseService.updateHabit(habit);
       }
     } catch (error, stackTrace) {
       // Revert on error
@@ -118,7 +136,7 @@ class HabitsNotifier extends StateNotifier<AsyncValue<List<Habit>>> {
       await _habitsBox.delete(habitId);
       
       // Sync to server
-      await _supabaseService.deleteHabit(habitId);
+      if (!kMockMode) await _supabaseService.deleteHabit(habitId);
     } catch (error, stackTrace) {
       // Revert on error
       await loadHabits();
@@ -141,12 +159,24 @@ class HabitsNotifier extends StateNotifier<AsyncValue<List<Habit>>> {
       }
       
       // Batch update to server
-      await _supabaseService.batchUpdateHabits(updatedHabits);
+      if (!kMockMode) {
+        await _supabaseService.batchUpdateHabits(updatedHabits);
+      }
     } catch (error, stackTrace) {
       // Revert on error
       await loadHabits();
       state = AsyncValue.error(error, stackTrace);
     }
+  }
+
+  List<Habit> _getDemoHabits() {
+    return [
+      Habit(id: 'demo_1', name: 'Gym', icon: '💪', color: '#FF6584', habitType: HabitType.yesNo, targetValue: 1, unit: '', frequencyDays: [1,2,3,4,5], position: 0, isArchived: false, createdAt: DateTime.now()),
+      Habit(id: 'demo_2', name: 'Read 30 min', icon: '📚', color: '#6C63FF', habitType: HabitType.timer, targetValue: 30, unit: 'minutes', frequencyDays: [1,2,3,4,5,6,7], position: 1, isArchived: false, createdAt: DateTime.now()),
+      Habit(id: 'demo_3', name: 'Drink Water', icon: '💧', color: '#4ECDC4', habitType: HabitType.count, targetValue: 8, unit: 'glasses', frequencyDays: [1,2,3,4,5,6,7], position: 2, isArchived: false, createdAt: DateTime.now()),
+      Habit(id: 'demo_4', name: 'Meditation', icon: '🧘', color: '#9C27B0', habitType: HabitType.timer, targetValue: 15, unit: 'minutes', frequencyDays: [1,2,3,4,5,6,7], position: 3, isArchived: false, createdAt: DateTime.now()),
+      Habit(id: 'demo_5', name: 'Study', icon: '🎯', color: '#00C853', habitType: HabitType.timer, targetValue: 60, unit: 'minutes', frequencyDays: [1,2,3,4,5,6], position: 4, isArchived: false, createdAt: DateTime.now()),
+    ];
   }
 }
 
@@ -174,8 +204,9 @@ class TodayEntriesNotifier extends StateNotifier<AsyncValue<Map<String, HabitEnt
         }
       }
       
-      if (cachedEntries.isNotEmpty) {
+      if (cachedEntries.isNotEmpty || kMockMode) {
         state = AsyncValue.data(cachedEntries);
+        if (kMockMode) return;
       }
       
       // Then sync with server
@@ -238,7 +269,7 @@ class TodayEntriesNotifier extends StateNotifier<AsyncValue<Map<String, HabitEnt
       await _entriesBox.put(newEntry.id, newEntry);
       
       // Sync to server
-      await _supabaseService.upsertEntry(newEntry);
+      if (!kMockMode) await _supabaseService.upsertEntry(newEntry);
     } catch (error, stackTrace) {
       // Revert on error
       await loadTodayEntries();
@@ -281,7 +312,7 @@ class TodayEntriesNotifier extends StateNotifier<AsyncValue<Map<String, HabitEnt
       await _entriesBox.put(newEntry.id, newEntry);
       
       // Sync to server
-      await _supabaseService.upsertEntry(newEntry);
+      if (!kMockMode) await _supabaseService.upsertEntry(newEntry);
     } catch (error, stackTrace) {
       // Revert on error
       await loadTodayEntries();
@@ -399,6 +430,10 @@ final habitProvider = Provider.family<Habit?, String>((ref, habitId) {
 
 // Habit entries provider for all entries (used by analytics)
 final habitEntriesProvider = FutureProvider<List<HabitEntry>>((ref) async {
+  if (kMockMode) {
+    final box = ref.watch(entriesBoxProvider);
+    return box.values.toList();
+  }
   final supabaseService = ref.watch(supabaseServiceProvider);
   return await supabaseService.getHabitEntries();
 });
