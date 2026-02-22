@@ -237,7 +237,7 @@ class NotificationService {
   }
 
   NotificationDetails _getNotificationDetails() {
-    const AndroidNotificationDetails androidDetails = AndroidNotificationDetails(
+    final androidDetails = AndroidNotificationDetails(
       'habit_reminders',
       'Habit Reminders',
       channelDescription: 'Notifications to remind you about your habits',
@@ -245,20 +245,20 @@ class NotificationService {
       priority: Priority.high,
       showWhen: false,
       icon: '@mipmap/ic_launcher',
-      color: Color(0xFF6C63FF),
+      color: const Color(0xFF6C63FF),
       playSound: true,
       enableVibration: true,
       vibrationPattern: Int64List.fromList([0, 250, 250, 250]),
     );
 
-    const DarwinNotificationDetails iOSDetails = DarwinNotificationDetails(
+    const iOSDetails = DarwinNotificationDetails(
       presentAlert: true,
       presentBadge: true,
       presentSound: true,
       sound: 'default',
     );
 
-    return const NotificationDetails(
+    return NotificationDetails(
       android: androidDetails,
       iOS: iOSDetails,
     );
