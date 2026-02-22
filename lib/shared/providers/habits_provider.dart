@@ -171,11 +171,11 @@ class HabitsNotifier extends StateNotifier<AsyncValue<List<Habit>>> {
 
   List<Habit> _getDemoHabits() {
     return [
-      Habit(id: 'demo_1', name: 'Gym', icon: '💪', color: '#FF6584', habitType: HabitType.yesNo, targetValue: 1, unit: '', frequencyDays: [1,2,3,4,5], position: 0, isArchived: false, createdAt: DateTime.now()),
-      Habit(id: 'demo_2', name: 'Read 30 min', icon: '📚', color: '#6C63FF', habitType: HabitType.timer, targetValue: 30, unit: 'minutes', frequencyDays: [1,2,3,4,5,6,7], position: 1, isArchived: false, createdAt: DateTime.now()),
-      Habit(id: 'demo_3', name: 'Drink Water', icon: '💧', color: '#4ECDC4', habitType: HabitType.count, targetValue: 8, unit: 'glasses', frequencyDays: [1,2,3,4,5,6,7], position: 2, isArchived: false, createdAt: DateTime.now()),
-      Habit(id: 'demo_4', name: 'Meditation', icon: '🧘', color: '#9C27B0', habitType: HabitType.timer, targetValue: 15, unit: 'minutes', frequencyDays: [1,2,3,4,5,6,7], position: 3, isArchived: false, createdAt: DateTime.now()),
-      Habit(id: 'demo_5', name: 'Study', icon: '🎯', color: '#00C853', habitType: HabitType.timer, targetValue: 60, unit: 'minutes', frequencyDays: [1,2,3,4,5,6], position: 4, isArchived: false, createdAt: DateTime.now()),
+      Habit(id: 'demo_1', name: 'Gym', icon: '💪', color: '#FF6584', habitType: HabitType.yesNo, targetValue: 1, unit: '', frequencyDays: [1,2,3,4,5], position: 0, isArchived: false, createdAt: DateTime.now(), updatedAt: DateTime.now()),
+      Habit(id: 'demo_2', name: 'Read 30 min', icon: '📚', color: '#6C63FF', habitType: HabitType.timer, targetValue: 30, unit: 'minutes', frequencyDays: [1,2,3,4,5,6,7], position: 1, isArchived: false, createdAt: DateTime.now(), updatedAt: DateTime.now()),
+      Habit(id: 'demo_3', name: 'Drink Water', icon: '💧', color: '#4ECDC4', habitType: HabitType.count, targetValue: 8, unit: 'glasses', frequencyDays: [1,2,3,4,5,6,7], position: 2, isArchived: false, createdAt: DateTime.now(), updatedAt: DateTime.now()),
+      Habit(id: 'demo_4', name: 'Meditation', icon: '🧘', color: '#9C27B0', habitType: HabitType.timer, targetValue: 15, unit: 'minutes', frequencyDays: [1,2,3,4,5,6,7], position: 3, isArchived: false, createdAt: DateTime.now(), updatedAt: DateTime.now()),
+      Habit(id: 'demo_5', name: 'Study', icon: '🎯', color: '#00C853', habitType: HabitType.timer, targetValue: 60, unit: 'minutes', frequencyDays: [1,2,3,4,5,6], position: 4, isArchived: false, createdAt: DateTime.now(), updatedAt: DateTime.now()),
     ];
   }
 }
