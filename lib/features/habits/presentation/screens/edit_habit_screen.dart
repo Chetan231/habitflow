@@ -135,7 +135,7 @@ class _EditHabitScreenState extends ConsumerState<EditHabitScreen>
 
       if (mounted) {
         context.showSuccessSnackBar(AppStrings.habitUpdated);
-        context.pop();
+        Navigator.pop(context);
       }
     } catch (e) {
       if (mounted) {
@@ -159,7 +159,7 @@ class _EditHabitScreenState extends ConsumerState<EditHabitScreen>
 
       if (mounted) {
         context.showSuccessSnackBar(AppStrings.habitDeleted);
-        context.pop();
+        Navigator.pop(context);
       }
     } catch (e) {
       if (mounted) {
@@ -214,7 +214,7 @@ class _EditHabitScreenState extends ConsumerState<EditHabitScreen>
         elevation: 0,
         leading: IconButton(
           icon: const Icon(Icons.arrow_back_ios_rounded, color: AppColors.textSecondary),
-          onPressed: () => context.pop(),
+          onPressed: () => Navigator.pop(context),
         ),
         title: Text(
           AppStrings.editHabit,

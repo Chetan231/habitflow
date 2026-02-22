@@ -276,11 +276,6 @@ extension BuildContextExtension on BuildContext {
     Navigator.of(this).pushReplacementNamed(routeName, arguments: arguments);
   }
 
-  /// Pop current route
-  void pop([Object? result]) {
-    Navigator.of(this).pop(result);
-  }
-
   /// Pop until root
   void popUntilRoot() {
     Navigator.of(this).popUntil((route) => route.isFirst);

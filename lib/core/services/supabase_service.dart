@@ -141,6 +141,17 @@ class SupabaseService {
     }
   }
 
+  Future<void> insertHabit(Habit habit) async {
+    try {
+      if (userId == null) throw Exception('User not authenticated');
+      
+      final habitData = habit.toJson()..['user_id'] = userId!;
+      await client.from('habits').insert(habitData);
+    } catch (e) {
+      rethrow;
+    }
+  }
+
   Future<Habit> createHabit(Habit habit) async {
     try {
       if (userId == null) throw Exception('User not authenticated');
@@ -244,6 +255,42 @@ class SupabaseService {
           .maybeSingle();
       
       return response != null ? HabitEntry.fromJson(response) : null;
+    } catch (e) {
+      rethrow;
+    }
+  }
+
+  Future<List<HabitEntry>> getEntriesForDate(DateTime date) async {
+    try {
+      if (userId == null) return [];
+      
+      final dateStr = date.toIso8601String().split('T')[0];
+      final response = await client
+          .from('habit_entries')
+          .select('*, habits!inner(user_id)')
+          .eq('habits.user_id', userId!)
+          .eq('date', dateStr);
+      
+      return response.map<HabitEntry>((json) => HabitEntry.fromJson(json)).toList();
+    } catch (e) {
+      rethrow;
+    }
+  }
+
+  Future<void> upsertEntry(HabitEntry entry) async {
+    try {
+      await client
+          .from('habit_entries')
+          .upsert(entry.toJson());
+    } catch (e) {
+      rethrow;
+    }
+  }
+
+  Future<void> batchUpdateHabits(List<Habit> habits) async {
+    try {
+      final updates = habits.map((habit) => habit.toJson()).toList();
+      await client.from('habits').upsert(updates);
     } catch (e) {
       rethrow;
     }

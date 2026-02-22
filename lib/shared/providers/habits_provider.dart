@@ -59,6 +59,10 @@ class HabitsNotifier extends StateNotifier<AsyncValue<List<Habit>>> {
     }
   }
 
+  Future<void> refresh() async {
+    await loadHabits();
+  }
+
   Future<void> addHabit(Habit habit) async {
     try {
       // Optimistically add to local state
@@ -159,13 +163,13 @@ class TodayEntriesNotifier extends StateNotifier<AsyncValue<Map<String, HabitEnt
   Future<void> loadTodayEntries() async {
     try {
       state = const AsyncValue.loading();
-      final today = DateUtils.today();
-      final todayKey = DateUtils.formatDate(today);
+      final today = AppDateUtils.today;
+      final todayKey = AppDateUtils.formatDate(today);
       
       // Load from local cache first
       final cachedEntries = <String, HabitEntry>{};
       for (final entry in _entriesBox.values) {
-        if (DateUtils.isSameDay(entry.date, today)) {
+        if (AppDateUtils.isSameDay(entry.date, today)) {
           cachedEntries[entry.habitId] = entry;
         }
       }
@@ -187,10 +191,10 @@ class TodayEntriesNotifier extends StateNotifier<AsyncValue<Map<String, HabitEnt
       state = AsyncValue.data(entriesToCache);
     } catch (error, stackTrace) {
       // If server fails, use cached data
-      final today = DateUtils.today();
+      final today = AppDateUtils.today;
       final cachedEntries = <String, HabitEntry>{};
       for (final entry in _entriesBox.values) {
-        if (DateUtils.isSameDay(entry.date, today)) {
+        if (AppDateUtils.isSameDay(entry.date, today)) {
           cachedEntries[entry.habitId] = entry;
         }
       }
@@ -206,7 +210,7 @@ class TodayEntriesNotifier extends StateNotifier<AsyncValue<Map<String, HabitEnt
   Future<void> toggleEntry(String habitId) async {
     try {
       final currentEntries = state.value ?? {};
-      final today = DateUtils.today();
+      final today = AppDateUtils.today;
       final existingEntry = currentEntries[habitId];
       
       HabitEntry newEntry;
@@ -217,7 +221,7 @@ class TodayEntriesNotifier extends StateNotifier<AsyncValue<Map<String, HabitEnt
         );
       } else {
         newEntry = HabitEntry(
-          id: '${habitId}_${DateUtils.formatDate(today)}',
+          id: '${habitId}_${AppDateUtils.formatDate(today)}',
           habitId: habitId,
           date: today,
           completed: true,
@@ -245,7 +249,7 @@ class TodayEntriesNotifier extends StateNotifier<AsyncValue<Map<String, HabitEnt
   Future<void> updateEntryValue(String habitId, double value) async {
     try {
       final currentEntries = state.value ?? {};
-      final today = DateUtils.today();
+      final today = AppDateUtils.today;
       final existingEntry = currentEntries[habitId];
       
       HabitEntry newEntry;
@@ -259,7 +263,7 @@ class TodayEntriesNotifier extends StateNotifier<AsyncValue<Map<String, HabitEnt
         );
       } else {
         newEntry = HabitEntry(
-          id: '${habitId}_${DateUtils.formatDate(today)}',
+          id: '${habitId}_${AppDateUtils.formatDate(today)}',
           habitId: habitId,
           date: today,
           completed: value > 0,
@@ -288,7 +292,7 @@ class TodayEntriesNotifier extends StateNotifier<AsyncValue<Map<String, HabitEnt
 
 // Providers
 final supabaseServiceProvider = Provider<SupabaseService>((ref) {
-  return SupabaseService();
+  return SupabaseService.instance;
 });
 
 final habitsBoxProvider = Provider<Box<Habit>>((ref) {
@@ -311,6 +315,20 @@ final todayEntriesProvider = StateNotifierProvider<TodayEntriesNotifier, AsyncVa
   return TodayEntriesNotifier(supabaseService, entriesBox);
 });
 
+final todayHabitsProvider = Provider<AsyncValue<List<Habit>>>((ref) {
+  final habitsAsync = ref.watch(habitsProvider);
+  
+  return habitsAsync.when(
+    data: (habits) {
+      final today = AppDateUtils.today;
+      final todayHabits = habits.where((habit) => habit.isActiveOnDate(today)).toList();
+      return AsyncValue.data(todayHabits);
+    },
+    loading: () => const AsyncValue.loading(),
+    error: (error, stackTrace) => AsyncValue.error(error, stackTrace),
+  );
+});
+
 final dailyProgressProvider = Provider<double>((ref) {
   final habitsAsync = ref.watch(habitsProvider);
   final entriesAsync = ref.watch(todayEntriesProvider);
@@ -321,7 +339,7 @@ final dailyProgressProvider = Provider<double>((ref) {
         data: (entries) {
           if (habits.isEmpty) return 0.0;
           
-          final today = DateUtils.today();
+          final today = AppDateUtils.today;
           final activeHabits = habits.where((habit) => habit.isActiveOnDate(today)).toList();
           
           if (activeHabits.isEmpty) return 0.0;
@@ -367,11 +385,20 @@ final habitEntryProvider = Provider.family<HabitEntry?, String>((ref, habitId) {
 final habitProvider = Provider.family<Habit?, String>((ref, habitId) {
   final habitsAsync = ref.watch(habitsProvider);
   return habitsAsync.when(
-    data: (habits) => habits.firstWhere(
-      (habit) => habit.id == habitId,
-      orElse: () => null,
-    ),
+    data: (habits) {
+      try {
+        return habits.firstWhere((habit) => habit.id == habitId);
+      } catch (e) {
+        return null;
+      }
+    },
     loading: () => null,
     error: (_, __) => null,
   );
+});
+
+// Habit entries provider for all entries (used by analytics)
+final habitEntriesProvider = FutureProvider<List<HabitEntry>>((ref) async {
+  final supabaseService = ref.watch(supabaseServiceProvider);
+  return await supabaseService.getHabitEntries();
 });

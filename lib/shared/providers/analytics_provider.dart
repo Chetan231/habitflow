@@ -3,6 +3,7 @@ import 'habits_provider.dart';
 import '../../features/habits/domain/models/habit.dart';
 import '../../features/habits/domain/models/habit_entry.dart';
 import '../../core/utils/date_utils.dart';
+import '../../core/utils/extensions.dart';
 
 // Daily completion percentage provider
 final dailyCompletionProvider = Provider<double>((ref) {
@@ -15,12 +16,9 @@ final dailyCompletionProvider = Provider<double>((ref) {
         if (habits.isEmpty) return 0.0;
         
         final completedHabits = habits.where((habit) {
-          final entry = entries.firstWhere(
-            (e) => e.habitId == habit.id,
-            orElse: () => HabitEntry.empty(),
-          );
+          final entry = entries[habit.id];
           
-          if (entry.id.isEmpty) return false;
+          if (entry == null) return false;
           
           switch (habit.habitType) {
             case HabitType.yesNo:
@@ -91,13 +89,15 @@ final currentStreaksProvider = Provider<AsyncValue<List<HabitStreak>>>((ref) {
           currentStreak = 0;
           for (int i = 0; i < 30; i++) {
             final date = today.subtract(Duration(days: i));
-            final dayEntry = entryList.firstWhere(
-              (entry) => entry.habitId == habit.id && 
-                         DateTimeExtensions.isSameDay(entry.date, date),
-              orElse: () => HabitEntry.empty(),
-            );
-            
-            if (dayEntry.id.isEmpty) break;
+            HabitEntry? dayEntry;
+            try {
+              dayEntry = entryList.firstWhere(
+                (entry) => entry.habitId == habit.id && 
+                           DateTimeExtensions.isSameDay(entry.date, date),
+              );
+            } catch (e) {
+              break;
+            }
             
             final isCompleted = habit.habitType == HabitType.yesNo
                 ? dayEntry.completed
@@ -151,13 +151,15 @@ final weeklyCompletionProvider = Provider<AsyncValue<Map<String, double>>>((ref)
           }
           
           final completedCount = dayHabits.where((habit) {
-            final entry = entryList.firstWhere(
-              (e) => e.habitId == habit.id && 
-                     DateTimeExtensions.isSameDay(e.date, date),
-              orElse: () => HabitEntry.empty(),
-            );
-            
-            if (entry.id.isEmpty) return false;
+            HabitEntry? entry;
+            try {
+              entry = entryList.firstWhere(
+                (e) => e.habitId == habit.id && 
+                       DateTimeExtensions.isSameDay(e.date, date),
+              );
+            } catch (e) {
+              return false;
+            }
             
             return habit.habitType == HabitType.yesNo
                 ? entry.completed
@@ -206,8 +208,96 @@ final bestHabitsProvider = Provider<AsyncValue<List<HabitPerformance>>>((ref) {
   );
 });
 
+// Heatmap data provider
+final heatmapDataProvider = Provider<AsyncValue<Map<String, int>>>((ref) {
+  final entries = ref.watch(habitEntriesProvider);
+  
+  return entries.when(
+    data: (entryList) {
+      final heatmapData = <String, int>{};
+      final completedEntries = entryList.where((entry) => entry.completed);
+      
+      for (final entry in completedEntries) {
+        final dateKey = AppDateUtils.formatIso(entry.date);
+        heatmapData[dateKey] = (heatmapData[dateKey] ?? 0) + 1;
+      }
+      
+      return AsyncValue.data(heatmapData);
+    },
+    loading: () => const AsyncValue.loading(),
+    error: (error, stack) => AsyncValue.error(error, stack),
+  );
+});
+
+// Weekly chart data provider
+final weeklyDataProvider = Provider<AsyncValue<List<double>>>((ref) {
+  final weeklyCompletion = ref.watch(weeklyCompletionProvider);
+  
+  return weeklyCompletion.when(
+    data: (weeklyData) {
+      final data = <double>[];
+      final days = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
+      
+      for (final day in days) {
+        data.add(weeklyData[day] ?? 0.0);
+      }
+      
+      return AsyncValue.data(data);
+    },
+    loading: () => const AsyncValue.loading(),
+    error: (error, stack) => AsyncValue.error(error, stack),
+  );
+});
+
+// Monthly chart data provider  
+final monthlyDataProvider = Provider<AsyncValue<List<double>>>((ref) {
+  final entries = ref.watch(habitEntriesProvider);
+  final habits = ref.watch(habitsProvider);
+  
+  return entries.when(
+    data: (entryList) => habits.when(
+      data: (habitList) {
+        final monthlyData = <double>[];
+        final now = DateTime.now();
+        
+        for (int i = 29; i >= 0; i--) {
+          final date = now.subtract(Duration(days: i));
+          final dayHabits = habitList.where((habit) => habit.isActiveOnDate(date));
+          
+          if (dayHabits.isEmpty) {
+            monthlyData.add(0.0);
+            continue;
+          }
+          
+          final completedCount = dayHabits.where((habit) {
+            try {
+              final entry = entryList.firstWhere(
+                (e) => e.habitId == habit.id && 
+                       DateTimeExtensions.isSameDay(e.date, date),
+              );
+              
+              return habit.habitType == HabitType.yesNo
+                  ? entry.completed
+                  : entry.value >= habit.targetValue;
+            } catch (e) {
+              return false;
+            }
+          }).length;
+          
+          monthlyData.add(completedCount / dayHabits.length);
+        }
+        
+        return AsyncValue.data(monthlyData);
+      },
+      loading: () => const AsyncValue.loading(),
+      error: (error, stack) => AsyncValue.error(error, stack),
+    ),
+    loading: () => const AsyncValue.loading(),
+    error: (error, stack) => AsyncValue.error(error, stack),
+  );
+});
+
 double _calculateCompletionRate(Habit habit, ProviderRef ref) {
-  // Mock calculation - replace with actual logic
   final entries = ref.read(habitEntriesProvider).value ?? [];
   final habitEntries = entries.where((e) => e.habitId == habit.id).toList();
   

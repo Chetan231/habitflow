@@ -70,7 +70,7 @@ class _HabitDetailScreenState extends ConsumerState<HabitDetailScreen>
           elevation: 0,
           leading: IconButton(
             icon: const Icon(Icons.arrow_back_ios_rounded, color: AppColors.textSecondary),
-            onPressed: () => context.pop(),
+            onPressed: () => Navigator.pop(context),
           ),
         ),
         body: const Center(
@@ -93,12 +93,12 @@ class _HabitDetailScreenState extends ConsumerState<HabitDetailScreen>
             backgroundColor: AppColors.surface,
             leading: IconButton(
               icon: const Icon(Icons.arrow_back_ios_rounded, color: AppColors.textSecondary),
-              onPressed: () => context.pop(),
+              onPressed: () => Navigator.pop(context),
             ),
             actions: [
               IconButton(
                 icon: const Icon(Icons.edit_rounded, color: AppColors.textSecondary),
-                onPressed: () => context.goToEditHabit(_habit!.id),
+                onPressed: () => GoRouter.of(context).push('/habits/${_habit!.id}/edit'),
               ),
             ],
             flexibleSpace: FlexibleSpaceBar(

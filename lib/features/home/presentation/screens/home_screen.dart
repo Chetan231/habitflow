@@ -49,7 +49,7 @@ class _HomeScreenState extends State<HomeScreen>
       label: AppStrings.aiCoachTab,
       icon: Icons.psychology_outlined,
       activeIcon: Icons.psychology_rounded,
-      screen: const AICoachScreen(),
+      screen: const AiCoachScreen(),
     ),
     _TabItem(
       index: 3,

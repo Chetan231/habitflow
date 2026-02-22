@@ -49,7 +49,7 @@ class NotificationService {
       final AndroidFlutterLocalNotificationsPlugin? androidImplementation =
           _notifications.resolvePlatformSpecificImplementation<AndroidFlutterLocalNotificationsPlugin>();
       
-      final bool? granted = await androidImplementation?.requestPermission();
+      final bool? granted = await androidImplementation?.requestNotificationsPermission();
       return granted ?? false;
     } else if (Platform.isIOS) {
       final bool? granted = await _notifications
@@ -246,7 +246,7 @@ class NotificationService {
       color: Color(0xFF6C63FF),
       playSound: true,
       enableVibration: true,
-      vibrationPattern: Int64List.fromList([0, 250, 250, 250]),
+      vibrationPattern: [0, 250, 250, 250],
     );
 
     const DarwinNotificationDetails iOSDetails = DarwinNotificationDetails(

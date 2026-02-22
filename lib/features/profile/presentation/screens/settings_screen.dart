@@ -41,7 +41,7 @@ class SettingsScreen extends ConsumerWidget {
                 value: isDark,
                 activeColor: AppColors.primary,
                 onChanged: (val) =>
-                    ref.read(themeProvider.notifier).toggle(),
+                    ref.read(themeProvider.notifier).toggleTheme(),
               ),
             ],
           ),
@@ -228,7 +228,7 @@ class SettingsScreen extends ConsumerWidget {
                     TextButton(
                       onPressed: () {
                         Navigator.pop(ctx2);
-                        ref.read(authProvider.notifier).signOut();
+                        ref.read(authNotifierProvider.notifier).signOut();
                         _showSnack(context, 'Account deleted');
                       },
                       child: const Text('DELETE ACCOUNT',

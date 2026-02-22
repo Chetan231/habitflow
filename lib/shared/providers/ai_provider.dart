@@ -42,6 +42,10 @@ class AIService {
     await Future.delayed(const Duration(milliseconds: 1000));
     
     return WeeklySummary(
+      score: 78,
+      bestHabit: 'Morning Exercise',
+      worstHabit: 'Evening Reading',
+      tip: "Try setting a specific time for evening reading to improve consistency.",
       completionRate: 0.78,
       totalHabits: 4,
       bestDay: 'Tuesday',
@@ -83,6 +87,10 @@ class AIService {
 }
 
 class WeeklySummary {
+  final int score;
+  final String bestHabit;
+  final String worstHabit;
+  final String tip;
   final double completionRate;
   final int totalHabits;
   final String bestDay;
@@ -90,6 +98,10 @@ class WeeklySummary {
   final String encouragement;
 
   const WeeklySummary({
+    required this.score,
+    required this.bestHabit,
+    required this.worstHabit,
+    required this.tip,
     required this.completionRate,
     required this.totalHabits,
     required this.bestDay,

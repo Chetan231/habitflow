@@ -12,7 +12,7 @@ class ProfileScreen extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final authState = ref.watch(authProvider);
+    final authState = ref.watch(authStateProvider);
 
     return Scaffold(
       backgroundColor: AppColors.background,
@@ -188,7 +188,7 @@ class ProfileScreen extends ConsumerWidget {
           TextButton(
             onPressed: () {
               Navigator.pop(context);
-              ref.read(authProvider.notifier).signOut();
+              ref.read(authNotifierProvider.notifier).signOut();
             },
             child: const Text('Logout',
                 style: TextStyle(color: AppColors.secondary)),

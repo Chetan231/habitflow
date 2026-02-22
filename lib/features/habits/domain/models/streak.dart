@@ -1,27 +1,13 @@
 import 'package:hive/hive.dart';
-import 'package:json_annotation/json_annotation.dart';
 
-part 'streak.g.dart';
-
-@JsonSerializable()
-@HiveType(typeId: 3)
 class Streak extends HiveObject {
-  @HiveField(0)
   final String habitId;
-  
-  @HiveField(1)
   final int currentStreak;
-  
-  @HiveField(2)
   final int longestStreak;
-  
-  @HiveField(3)
   final DateTime? lastCompletedDate;
-  
-  @HiveField(4)
   final DateTime? streakStartDate;
 
-  const Streak({
+  Streak({
     required this.habitId,
     this.currentStreak = 0,
     this.longestStreak = 0,
@@ -29,8 +15,29 @@ class Streak extends HiveObject {
     this.streakStartDate,
   });
 
-  factory Streak.fromJson(Map<String, dynamic> json) => _$StreakFromJson(json);
-  Map<String, dynamic> toJson() => _$StreakToJson(this);
+  factory Streak.fromJson(Map<String, dynamic> json) {
+    return Streak(
+      habitId: json['habitId'] as String,
+      currentStreak: json['currentStreak'] as int? ?? 0,
+      longestStreak: json['longestStreak'] as int? ?? 0,
+      lastCompletedDate: json['lastCompletedDate'] != null 
+          ? DateTime.parse(json['lastCompletedDate'] as String) 
+          : null,
+      streakStartDate: json['streakStartDate'] != null 
+          ? DateTime.parse(json['streakStartDate'] as String) 
+          : null,
+    );
+  }
+
+  Map<String, dynamic> toJson() {
+    return {
+      'habitId': habitId,
+      'currentStreak': currentStreak,
+      'longestStreak': longestStreak,
+      'lastCompletedDate': lastCompletedDate?.toIso8601String(),
+      'streakStartDate': streakStartDate?.toIso8601String(),
+    };
+  }
 
   Streak copyWith({
     String? habitId,
@@ -173,5 +180,42 @@ class Streak extends HiveObject {
   @override
   String toString() {
     return 'Streak(habitId: $habitId, current: $currentStreak, longest: $longestStreak, isActive: $isActive)';
+  }
+}
+
+class StreakAdapter extends TypeAdapter<Streak> {
+  @override
+  final int typeId = 2;
+
+  @override
+  Streak read(BinaryReader reader) {
+    final numOfFields = reader.readByte();
+    final fields = <int, dynamic>{
+      for (int i = 0; i < numOfFields; i++) reader.readByte(): reader.read(),
+    };
+    
+    return Streak(
+      habitId: fields[0] as String,
+      currentStreak: fields[1] as int? ?? 0,
+      longestStreak: fields[2] as int? ?? 0,
+      lastCompletedDate: fields[3] as DateTime?,
+      streakStartDate: fields[4] as DateTime?,
+    );
+  }
+
+  @override
+  void write(BinaryWriter writer, Streak obj) {
+    writer
+      ..writeByte(5)
+      ..writeByte(0)
+      ..write(obj.habitId)
+      ..writeByte(1)
+      ..write(obj.currentStreak)
+      ..writeByte(2)
+      ..write(obj.longestStreak)
+      ..writeByte(3)
+      ..write(obj.lastCompletedDate)
+      ..writeByte(4)
+      ..write(obj.streakStartDate);
   }
 }

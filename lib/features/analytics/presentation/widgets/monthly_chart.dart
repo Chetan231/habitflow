@@ -99,7 +99,7 @@ class _MonthlyChartState extends State<MonthlyChart>
                       enabled: true,
                       handleBuiltInTouches: true,
                       touchTooltipData: LineTouchTooltipData(
-                        getTooltipColor: (touchedSpot) => AppColors.surface,
+                        tooltipBgColor: AppColors.surface,
                         tooltipBorder: BorderSide(
                           color: AppColors.glassBorder,
                           width: 1,

@@ -99,7 +99,7 @@ class _AddHabitScreenState extends ConsumerState<AddHabitScreen>
 
       if (mounted) {
         context.showSuccessSnackBar(AppStrings.habitAdded);
-        context.pop();
+        Navigator.pop(context);
       }
     } catch (e) {
       if (mounted) {
@@ -121,7 +121,7 @@ class _AddHabitScreenState extends ConsumerState<AddHabitScreen>
         elevation: 0,
         leading: IconButton(
           icon: const Icon(Icons.close_rounded, color: AppColors.textSecondary),
-          onPressed: () => context.pop(),
+          onPressed: () => Navigator.pop(context),
         ),
         title: Text(
           AppStrings.addHabit,

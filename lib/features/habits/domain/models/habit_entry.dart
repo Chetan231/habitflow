@@ -1,33 +1,15 @@
 import 'package:hive/hive.dart';
-import 'package:json_annotation/json_annotation.dart';
 
-part 'habit_entry.g.dart';
-
-@JsonSerializable()
-@HiveType(typeId: 2)
 class HabitEntry extends HiveObject {
-  @HiveField(0)
   final String id;
-  
-  @HiveField(1)
   final String habitId;
-  
-  @HiveField(2)
   final DateTime date;
-  
-  @HiveField(3)
   final bool completed;
-  
-  @HiveField(4)
   final double value; // For count/timer habits
-  
-  @HiveField(5)
   final String notes;
-  
-  @HiveField(6)
   final DateTime? completedAt;
 
-  const HabitEntry({
+  HabitEntry({
     required this.id,
     required this.habitId,
     required this.date,
@@ -37,8 +19,29 @@ class HabitEntry extends HiveObject {
     this.completedAt,
   });
 
-  factory HabitEntry.fromJson(Map<String, dynamic> json) => _$HabitEntryFromJson(json);
-  Map<String, dynamic> toJson() => _$HabitEntryToJson(this);
+  factory HabitEntry.fromJson(Map<String, dynamic> json) {
+    return HabitEntry(
+      id: json['id'] as String,
+      habitId: json['habitId'] as String,
+      date: DateTime.parse(json['date'] as String),
+      completed: json['completed'] as bool? ?? false,
+      value: (json['value'] as num?)?.toDouble() ?? 0.0,
+      notes: json['notes'] as String? ?? '',
+      completedAt: json['completedAt'] != null ? DateTime.parse(json['completedAt'] as String) : null,
+    );
+  }
+
+  Map<String, dynamic> toJson() {
+    return {
+      'id': id,
+      'habitId': habitId,
+      'date': date.toIso8601String(),
+      'completed': completed,
+      'value': value,
+      'notes': notes,
+      'completedAt': completedAt?.toIso8601String(),
+    };
+  }
 
   static HabitEntry empty() => HabitEntry(
         id: '',
@@ -130,5 +133,48 @@ class HabitEntry extends HiveObject {
   @override
   String toString() {
     return 'HabitEntry(id: $id, habitId: $habitId, date: ${date.toString().split(' ')[0]}, completed: $completed, value: $value)';
+  }
+}
+
+class HabitEntryAdapter extends TypeAdapter<HabitEntry> {
+  @override
+  final int typeId = 1;
+
+  @override
+  HabitEntry read(BinaryReader reader) {
+    final numOfFields = reader.readByte();
+    final fields = <int, dynamic>{
+      for (int i = 0; i < numOfFields; i++) reader.readByte(): reader.read(),
+    };
+    
+    return HabitEntry(
+      id: fields[0] as String,
+      habitId: fields[1] as String,
+      date: fields[2] as DateTime,
+      completed: fields[3] as bool? ?? false,
+      value: (fields[4] as num?)?.toDouble() ?? 0.0,
+      notes: fields[5] as String? ?? '',
+      completedAt: fields[6] as DateTime?,
+    );
+  }
+
+  @override
+  void write(BinaryWriter writer, HabitEntry obj) {
+    writer
+      ..writeByte(7)
+      ..writeByte(0)
+      ..write(obj.id)
+      ..writeByte(1)
+      ..write(obj.habitId)
+      ..writeByte(2)
+      ..write(obj.date)
+      ..writeByte(3)
+      ..write(obj.completed)
+      ..writeByte(4)
+      ..write(obj.value)
+      ..writeByte(5)
+      ..write(obj.notes)
+      ..writeByte(6)
+      ..write(obj.completedAt);
   }
 }

@@ -1,8 +1,3 @@
-import 'package:json_annotation/json_annotation.dart';
-
-part 'user_profile.g.dart';
-
-@JsonSerializable()
 class UserProfile {
   final String id;
   final String email;
@@ -28,8 +23,35 @@ class UserProfile {
     this.timezone = 'UTC',
   });
 
-  factory UserProfile.fromJson(Map<String, dynamic> json) => _$UserProfileFromJson(json);
-  Map<String, dynamic> toJson() => _$UserProfileToJson(this);
+  factory UserProfile.fromJson(Map<String, dynamic> json) {
+    return UserProfile(
+      id: json['id'] as String,
+      email: json['email'] as String,
+      name: json['name'] as String,
+      avatarUrl: json['avatarUrl'] as String?,
+      createdAt: DateTime.parse(json['createdAt'] as String),
+      updatedAt: DateTime.parse(json['updatedAt'] as String),
+      preferences: json['preferences'] as Map<String, dynamic>?,
+      notificationsEnabled: json['notificationsEnabled'] as bool? ?? true,
+      darkModeEnabled: json['darkModeEnabled'] as bool? ?? true,
+      timezone: json['timezone'] as String? ?? 'UTC',
+    );
+  }
+
+  Map<String, dynamic> toJson() {
+    return {
+      'id': id,
+      'email': email,
+      'name': name,
+      'avatarUrl': avatarUrl,
+      'createdAt': createdAt.toIso8601String(),
+      'updatedAt': updatedAt.toIso8601String(),
+      'preferences': preferences,
+      'notificationsEnabled': notificationsEnabled,
+      'darkModeEnabled': darkModeEnabled,
+      'timezone': timezone,
+    };
+  }
 
   UserProfile copyWith({
     String? id,

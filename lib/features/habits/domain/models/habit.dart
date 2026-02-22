@@ -1,69 +1,61 @@
 import 'package:hive/hive.dart';
-import 'package:json_annotation/json_annotation.dart';
-import '../../../../core/utils/date_utils.dart';
 
-part 'habit.g.dart';
-
-@JsonEnum()
-@HiveType(typeId: 0)
 enum HabitType {
-  @HiveField(0)
-  @JsonValue('yes_no')
   yesNo,
-  
-  @HiveField(1)
-  @JsonValue('count')
   count,
-  
-  @HiveField(2)
-  @JsonValue('timer')
   timer,
 }
 
-@JsonSerializable()
-@HiveType(typeId: 1)
+class HabitTypeAdapter extends TypeAdapter<HabitType> {
+  @override
+  final int typeId = 3;
+
+  @override
+  HabitType read(BinaryReader reader) {
+    switch (reader.readByte()) {
+      case 0:
+        return HabitType.yesNo;
+      case 1:
+        return HabitType.count;
+      case 2:
+        return HabitType.timer;
+      default:
+        return HabitType.yesNo;
+    }
+  }
+
+  @override
+  void write(BinaryWriter writer, HabitType obj) {
+    switch (obj) {
+      case HabitType.yesNo:
+        writer.writeByte(0);
+        break;
+      case HabitType.count:
+        writer.writeByte(1);
+        break;
+      case HabitType.timer:
+        writer.writeByte(2);
+        break;
+    }
+  }
+}
+
 class Habit extends HiveObject {
-  @HiveField(0)
   final String id;
-  
-  @HiveField(1)
   final String name;
-  
-  @HiveField(2)
   final String icon;
-  
-  @HiveField(3)
   final String color;
-  
-  @HiveField(4)
   final HabitType habitType;
-  
-  @HiveField(5)
   final int targetValue;
-  
-  @HiveField(6)
   final String unit;
-  
-  @HiveField(7)
-  final List<int> frequencyDays; // 1-7 (Monday-Sunday)
-  
-  @HiveField(8)
-  @JsonKey(fromJson: _timeOfDayFromJson, toJson: _timeOfDayToJson)
-  final TimeOfDay? reminderTime;
-  
-  @HiveField(9)
+  final List<int> frequencyDays;
+  final String? reminderTime; // Store as "HH:mm" string
   final int position;
-  
-  @HiveField(10)
   final bool isArchived;
-  
-  @HiveField(11)
   final DateTime createdAt;
-  
-  @HiveField(12)
   final DateTime updatedAt;
 
-  const Habit({
+  Habit({
     required this.id,
     required this.name,
     required this.icon,
@@ -79,8 +71,44 @@ class Habit extends HiveObject {
     required this.updatedAt,
   });
 
-  factory Habit.fromJson(Map<String, dynamic> json) => _$HabitFromJson(json);
-  Map<String, dynamic> toJson() => _$HabitToJson(this);
+  factory Habit.fromJson(Map<String, dynamic> json) {
+    return Habit(
+      id: json['id'] as String,
+      name: json['name'] as String,
+      icon: json['icon'] as String,
+      color: json['color'] as String,
+      habitType: HabitType.values.firstWhere(
+        (e) => e.toString().split('.').last == json['habitType'],
+        orElse: () => HabitType.yesNo,
+      ),
+      targetValue: json['targetValue'] as int? ?? 1,
+      unit: json['unit'] as String? ?? '',
+      frequencyDays: List<int>.from(json['frequencyDays'] ?? []),
+      reminderTime: json['reminderTime'] as String?,
+      position: json['position'] as int? ?? 0,
+      isArchived: json['isArchived'] as bool? ?? false,
+      createdAt: DateTime.parse(json['createdAt'] as String),
+      updatedAt: DateTime.parse(json['updatedAt'] as String),
+    );
+  }
+
+  Map<String, dynamic> toJson() {
+    return {
+      'id': id,
+      'name': name,
+      'icon': icon,
+      'color': color,
+      'habitType': habitType.toString().split('.').last,
+      'targetValue': targetValue,
+      'unit': unit,
+      'frequencyDays': frequencyDays,
+      'reminderTime': reminderTime,
+      'position': position,
+      'isArchived': isArchived,
+      'createdAt': createdAt.toIso8601String(),
+      'updatedAt': updatedAt.toIso8601String(),
+    };
+  }
 
   static Habit empty() => Habit(
         id: '',
@@ -101,7 +129,7 @@ class Habit extends HiveObject {
     int? targetValue,
     String? unit,
     List<int>? frequencyDays,
-    TimeOfDay? reminderTime,
+    String? reminderTime,
     int? position,
     bool? isArchived,
     DateTime? createdAt,
@@ -202,16 +230,6 @@ class Habit extends HiveObject {
     }
   }
 
-  static TimeOfDay? _timeOfDayFromJson(Map<String, dynamic>? json) {
-    if (json == null) return null;
-    return TimeOfDay(hour: json['hour'] as int, minute: json['minute'] as int);
-  }
-
-  static Map<String, dynamic>? _timeOfDayToJson(TimeOfDay? timeOfDay) {
-    if (timeOfDay == null) return null;
-    return {'hour': timeOfDay.hour, 'minute': timeOfDay.minute};
-  }
-
   @override
   bool operator ==(Object other) {
     if (identical(this, other)) return true;
@@ -248,50 +266,63 @@ class Habit extends HiveObject {
   }
 }
 
-// Hive adapter for TimeOfDay since it's not a primitive type
-class TimeOfDay {
-  final int hour;
-  final int minute;
+class HabitAdapter extends TypeAdapter<Habit> {
+  @override
+  final int typeId = 0;
 
-  const TimeOfDay({required this.hour, required this.minute});
-
-  factory TimeOfDay.now() {
-    final now = DateTime.now();
-    return TimeOfDay(hour: now.hour, minute: now.minute);
-  }
-
-  String format24Hour() {
-    return '${hour.toString().padLeft(2, '0')}:${minute.toString().padLeft(2, '0')}';
-  }
-
-  String format12Hour() {
-    final period = hour >= 12 ? 'PM' : 'AM';
-    final hour12 = hour == 0 ? 12 : (hour > 12 ? hour - 12 : hour);
-    return '${hour12.toString().padLeft(2, '0')}:${minute.toString().padLeft(2, '0')} $period';
-  }
-
-  DateTime toDateTime([DateTime? date]) {
-    final now = date ?? DateTime.now();
-    return DateTime(now.year, now.month, now.day, hour, minute);
-  }
-
-  bool isBefore(TimeOfDay other) {
-    return hour < other.hour || (hour == other.hour && minute < other.minute);
-  }
-
-  bool isAfter(TimeOfDay other) {
-    return hour > other.hour || (hour == other.hour && minute > other.minute);
+  @override
+  Habit read(BinaryReader reader) {
+    final numOfFields = reader.readByte();
+    final fields = <int, dynamic>{
+      for (int i = 0; i < numOfFields; i++) reader.readByte(): reader.read(),
+    };
+    
+    return Habit(
+      id: fields[0] as String,
+      name: fields[1] as String,
+      icon: fields[2] as String,
+      color: fields[3] as String,
+      habitType: fields[4] as HabitType,
+      targetValue: fields[5] as int? ?? 1,
+      unit: fields[6] as String? ?? '',
+      frequencyDays: fields[7] != null ? List<int>.from(fields[7]) : [],
+      reminderTime: fields[8] as String?,
+      position: fields[9] as int? ?? 0,
+      isArchived: fields[10] as bool? ?? false,
+      createdAt: fields[11] as DateTime,
+      updatedAt: fields[12] as DateTime,
+    );
   }
 
   @override
-  bool operator ==(Object other) {
-    if (identical(this, other)) return true;
-    return other is TimeOfDay && other.hour == hour && other.minute == minute;
+  void write(BinaryWriter writer, Habit obj) {
+    writer
+      ..writeByte(13)
+      ..writeByte(0)
+      ..write(obj.id)
+      ..writeByte(1)
+      ..write(obj.name)
+      ..writeByte(2)
+      ..write(obj.icon)
+      ..writeByte(3)
+      ..write(obj.color)
+      ..writeByte(4)
+      ..write(obj.habitType)
+      ..writeByte(5)
+      ..write(obj.targetValue)
+      ..writeByte(6)
+      ..write(obj.unit)
+      ..writeByte(7)
+      ..write(obj.frequencyDays)
+      ..writeByte(8)
+      ..write(obj.reminderTime)
+      ..writeByte(9)
+      ..write(obj.position)
+      ..writeByte(10)
+      ..write(obj.isArchived)
+      ..writeByte(11)
+      ..write(obj.createdAt)
+      ..writeByte(12)
+      ..write(obj.updatedAt);
   }
-
-  @override
-  int get hashCode => Object.hash(hour, minute);
-
-  @override
-  String toString() => format24Hour();
 }

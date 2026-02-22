@@ -54,18 +54,18 @@ class _TodayScreenState extends ConsumerState<TodayScreen>
     _refreshController.forward();
     
     await Future.wait([
-      ref.read(habitsProvider.notifier).refresh(),
-      ref.read(habitEntriesProvider.notifier).refresh(),
+      ref.read(habitsProvider.notifier).loadHabits(),
+      ref.read(todayEntriesProvider.notifier).loadTodayEntries(),
     ]);
     
     _refreshController.reset();
   }
 
   void _onHabitUpdate(habitEntry) {
-    ref.read(habitEntriesProvider.notifier).updateEntry(habitEntry);
+    ref.read(todayEntriesProvider.notifier).toggleEntry(habitEntry.habitId);
     
     // Check if all habits are completed for confetti
-    final completion = ref.read(dailyCompletionProvider);
+    final completion = ref.read(dailyProgressProvider);
     if (completion >= 1.0 && !_showConfetti) {
       setState(() => _showConfetti = true);
       _confettiController.forward().then((_) {
@@ -79,7 +79,7 @@ class _TodayScreenState extends ConsumerState<TodayScreen>
   Widget build(BuildContext context) {
     final todayHabits = ref.watch(todayHabitsProvider);
     final todayEntries = ref.watch(todayEntriesProvider);
-    final dailyCompletion = ref.watch(dailyCompletionProvider);
+    final dailyCompletion = ref.watch(dailyProgressProvider);
     final streaks = ref.watch(currentStreaksProvider);
 
     return Scaffold(

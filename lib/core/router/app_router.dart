@@ -47,8 +47,8 @@ final routerProvider = Provider<GoRouter>((ref) {
         error: (_, __) => false,
       );
       
-      final isOnboarding = state.location == AppRoutes.onboarding;
-      final isAuthRoute = state.location == AppRoutes.login || state.location == AppRoutes.signup;
+      final isOnboarding = state.uri.path == AppRoutes.onboarding;
+      final isAuthRoute = state.uri.path == AppRoutes.login || state.uri.path == AppRoutes.signup;
       
       // If not authenticated and not on auth/onboarding routes, redirect to login
       if (!isAuthenticated && !isAuthRoute && !isOnboarding) {
@@ -128,7 +128,7 @@ final routerProvider = Provider<GoRouter>((ref) {
             pageBuilder: (context, state) => _buildPageWithFadeTransition(
               context,
               state,
-              const AICoachScreen(),
+              const AiCoachScreen(),
             ),
           ),
           GoRoute(

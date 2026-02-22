@@ -100,7 +100,7 @@ class _WeeklyChartState extends State<WeeklyChart>
                     barTouchData: BarTouchData(
                       enabled: true,
                       touchTooltipData: BarTouchTooltipData(
-                        getTooltipColor: (group) => AppColors.surface,
+                        tooltipBgColor: AppColors.surface,
                         tooltipBorder: BorderSide(
                           color: AppColors.glassBorder,
                           width: 1,
